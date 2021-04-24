@@ -1,5 +1,9 @@
 export class PeerToPeerSession {
-  sessionName = "session";
+  private sessionName = "default";
 
   constructor() {}
+
+  startSession = (sessionName: string) => {
+    this.sessionName = sessionName;
+  };
 }
