@@ -12,6 +12,7 @@ if (
   process.env.REACT_APP_VIAGENIE_USERNAME &&
   process.env.REACT_APP_VIAGENIE_PASSWORD
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   webRtcConfig.iceServers!.push({
     urls: "turn:numb.viagenie.ca:3478",
     username: process.env.REACT_APP_VIAGENIE_USERNAME,
@@ -24,6 +25,7 @@ if (
   process.env.REACT_APP_TURN_SERVER_USERNAME &&
   process.env.REACT_APP_TURN_SERVER_PASSWORD
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   webRtcConfig.iceServers!.push({
     urls: process.env.REACT_APP_TURN_SERVER_URL,
     username: process.env.REACT_APP_TURN_SERVER_USERNAME,
@@ -31,6 +33,7 @@ if (
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 if (webRtcConfig.iceServers!.length < 2) {
   warn(
     "peerToPeer",
