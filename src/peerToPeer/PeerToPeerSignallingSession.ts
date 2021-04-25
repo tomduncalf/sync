@@ -14,16 +14,30 @@ import {
 import { agoraConfig } from "src/config/agoraConfig";
 import { Log } from "src/logging/Log";
 
-type IceCandidateMessage = {
+interface BaseMessage {
+  eventType: string;
+}
+
+interface IceCandidateMessage extends BaseMessage {
   eventType: "ICE_CANDIDATE";
   candidate: RTCIceCandidate;
-};
+}
 
-type Message = IceCandidateMessage;
+interface SessionDescriptionMessage extends BaseMessage {
+  eventType: "SESSION_DESCRIPTION";
+  description: RTCSessionDescriptionInit;
+}
+
+type Message = IceCandidateMessage | SessionDescriptionMessage;
 
 export type SignallingSessionReadyCallback = (isOfferer: boolean) => void;
+
 export type SignallingIceCandidateCallback = (
   candidate: RTCIceCandidate
+) => void;
+
+export type SignallingSessionDescriptionCallback = (
+  description: RTCSessionDescriptionInit
 ) => void;
 
 export class PeerToPeerSignallingSession {
@@ -39,7 +53,8 @@ export class PeerToPeerSignallingSession {
     private sessionName: string,
     private username: string,
     private sessionReadyCallback: SignallingSessionReadyCallback,
-    private iceCandidateCallback: SignallingIceCandidateCallback
+    private iceCandidateCallback: SignallingIceCandidateCallback,
+    private sessionDescriptionCallback: SignallingSessionDescriptionCallback
   ) {
     makeObservable<this, "setConnected">(this, {
       isOfferer: computed,
@@ -78,6 +93,10 @@ export class PeerToPeerSignallingSession {
 
   sendIceCandidate = (candidate: RTCIceCandidate) => {
     this.sendMessage({ eventType: "ICE_CANDIDATE", candidate });
+  };
+
+  sendSessionDescription = (description: RTCSessionDescriptionInit) => {
+    this.sendMessage({ eventType: "SESSION_DESCRIPTION", description });
   };
 
   private sendMessage = (message: Message): void => {
@@ -165,11 +184,13 @@ export class PeerToPeerSignallingSession {
       case "ICE_CANDIDATE":
         this.iceCandidateCallback(message.candidate);
         break;
+      case "SESSION_DESCRIPTION":
+        this.sessionDescriptionCallback(message.description);
+        break;
       default:
-        this.log.warn(
-          `handleChannelMessage: Unexpected eventType: ${message.eventType}`,
-          { message }
-        );
+        this.log.warn(`handleChannelMessage: Unexpected eventType`, {
+          message,
+        });
         break;
     }
   };

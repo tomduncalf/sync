@@ -2,6 +2,9 @@ import { webRtcConfig } from "src/config/webRtcConfig";
 import { Log } from "src/logging/Log";
 
 export type IceCandidateCallback = (event: RTCPeerConnectionIceEvent) => void;
+export type LocalDescriptionSetCallback = (
+  description: RTCSessionDescriptionInit
+) => void;
 
 export class WebRtcSession {
   private log = new Log("peerToPeerWebRtc");
@@ -9,7 +12,10 @@ export class WebRtcSession {
   private peerConnection = new RTCPeerConnection(webRtcConfig);
   private dataChannel?: RTCDataChannel;
 
-  constructor(iceCandidateCallback: IceCandidateCallback) {
+  constructor(
+    iceCandidateCallback: IceCandidateCallback,
+    private localDescriptionSetCallback: LocalDescriptionSetCallback
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (webRtcConfig.iceServers!.length < 2) {
       this.log.warn(
@@ -33,7 +39,7 @@ export class WebRtcSession {
     };
 
     this.dataChannel = this.peerConnection.createDataChannel("chat");
-    // setupDataChannel();
+    this.setupDataChannel();
   };
 
   waitForDataChannel = async () => {
@@ -41,7 +47,7 @@ export class WebRtcSession {
 
     this.peerConnection.ondatachannel = (event) => {
       this.dataChannel = event.channel;
-      //setupDataChannel();
+      this.setupDataChannel();
     };
   };
 
@@ -51,14 +57,60 @@ export class WebRtcSession {
     this.peerConnection.addIceCandidate(candidate);
   };
 
+  setRemoteDescription = async (description: RTCSessionDescriptionInit) => {
+    this.log.trace("setRemoteDescription", { description });
+
+    await this.peerConnection.setRemoteDescription(description);
+    if (description.type === "offer") {
+      const localDescription = await this.peerConnection.createAnswer();
+      this.setLocalDescription(localDescription);
+    }
+  };
+
   private setLocalDescription = async (
     description: RTCSessionDescriptionInit
   ) => {
     try {
       await this.peerConnection.setLocalDescription(description);
-      // callback here
+      this.localDescriptionSetCallback(description);
     } catch (e) {
       this.log.error("setLocalDescription error", e);
     }
+  };
+
+  private setupDataChannel = () => {
+    if (!this.dataChannel) {
+      this.log.error("setupDataChannel called before data channel ready");
+      return;
+    }
+
+    this.log.trace("setupDataChannel");
+
+    this.dataChannel.onopen = this.checkDataChannelState;
+    this.dataChannel.onclose = this.checkDataChannelState;
+    this.dataChannel.onmessage = (event) => this.handleMessage(event);
+  };
+
+  private checkDataChannelState = () => {
+    if (!this.dataChannel) {
+      this.log.error("checkDataChannelState called before data channel ready");
+      return;
+    }
+
+    this.log.trace(`Data channel state is ${this.dataChannel.readyState}`);
+
+    if (this.dataChannel.readyState === "open") {
+      this.log.debug("Data channel open");
+
+      setInterval(() => {
+        this.dataChannel!.send(Math.random().toString());
+      }, 1000);
+
+      // newPeerJoined(isWebrtcSessionMaster);
+    }
+  };
+
+  private handleMessage = (event: MessageEvent<any>) => {
+    this.log.debug("handleMessage", event.data);
   };
 }
