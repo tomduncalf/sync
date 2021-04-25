@@ -17,6 +17,7 @@
 
 import { computed, makeObservable } from "mobx";
 import { Log } from "src/logging/Log";
+import { PeerToPeerMessage } from "src/peerToPeer/messages";
 import {
   PeerToPeerSignallingSession,
   SignallingIceCandidateCallback,
@@ -62,7 +63,7 @@ export class PeerToPeerSession {
   }
 
   get connected(): boolean {
-    return this.signalling.connected;
+    return this.signalling.connected && this.webRtc.connected;
   }
 
   startSession = (): void => {
@@ -71,6 +72,17 @@ export class PeerToPeerSession {
 
   endSession = (): void => {
     this.signalling.endSession();
+  };
+
+  sendMessage = (message: PeerToPeerMessage) => {
+    if (!this.connected) {
+      this.log.error(`sendMessage called before we are connected`, { message });
+      return;
+    }
+
+    this.log.debug("sendMessage", message);
+
+    this.webRtc.sendMessage(JSON.stringify(message));
   };
 
   private handleIceCandidate: IceCandidateCallback = (event) => {
