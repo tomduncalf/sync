@@ -28,10 +28,17 @@ import {
   WebRtcSession,
   IceCandidateCallback,
   LocalDescriptionSetCallback,
+  WebRtcMessageCallback,
 } from "src/peerToPeer/WebRtcSession";
 
 export class PeerToPeerSession {
   private log = new Log("peerToPeer");
+
+  private messageHandlers: Record<
+    string,
+    // TODO how to model message type?
+    ((message: any) => void)[]
+  > = {};
 
   private signalling: PeerToPeerSignallingSession;
   private webRtc: WebRtcSession;
@@ -51,7 +58,8 @@ export class PeerToPeerSession {
     );
     this.webRtc = new WebRtcSession(
       this.handleIceCandidate,
-      this.handleLocalDescriptionSet
+      this.handleLocalDescriptionSet,
+      this.handleWebRtcMessage
     );
   }
 
@@ -80,6 +88,17 @@ export class PeerToPeerSession {
     this.log.debug("sendMessage", message);
 
     this.webRtc.sendMessage(JSON.stringify(message));
+  };
+
+  registerMessageHandler = <T extends PeerToPeerMessage>(
+    messageType: T["eventType"],
+    handler: (message: T) => void
+  ) => {
+    if (this.messageHandlers[messageType] === undefined) {
+      this.messageHandlers[messageType] = [handler];
+    } else {
+      this.messageHandlers[messageType].push(handler);
+    }
   };
 
   private handleIceCandidate: IceCandidateCallback = (event) => {
@@ -122,5 +141,26 @@ export class PeerToPeerSession {
     this.log.trace("handleSignallingSessionDescription", { description });
 
     this.webRtc.setRemoteDescription(description);
+  };
+
+  private handleWebRtcMessage: WebRtcMessageCallback = (rawMessage) => {
+    try {
+      const message = JSON.parse(rawMessage) as PeerToPeerMessage;
+
+      if (this.messageHandlers[message.eventType]) {
+        this.messageHandlers[message.eventType].forEach((handler) =>
+          handler(message)
+        );
+      } else {
+        this.log.warn(
+          `handleWebRtcMessage: no handlers registered for ${message.eventType}`,
+          { message }
+        );
+      }
+    } catch (e) {
+      this.log.error(`handleWebRtcMessage: Error handling message`, {
+        rawMessage,
+      });
+    }
   };
 }
