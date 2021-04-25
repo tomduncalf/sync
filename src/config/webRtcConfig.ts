@@ -1,5 +1,3 @@
-import { warn } from "src/logging/logging";
-
 export const webRtcConfig: RTCConfiguration = {
   iceServers: [
     {
@@ -31,12 +29,4 @@ if (
     username: process.env.REACT_APP_TURN_SERVER_USERNAME,
     credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
   });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-if (webRtcConfig.iceServers!.length < 2) {
-  warn(
-    "peerToPeer",
-    "No TURN server is configured which may result in connectivity issues, see README"
-  );
 }

@@ -6,5 +6,7 @@ export const loggingConfig = {
   },
   modules: {
     peerToPeer: { debug: true, warn: true },
+    peerToPeerSignalling: { debug: true, warn: true },
+    peerToPeerWebRtc: { debug: true, warn: true },
   },
 };

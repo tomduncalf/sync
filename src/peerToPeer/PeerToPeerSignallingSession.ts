@@ -6,7 +6,7 @@ import AgoraRTM, {
 } from "agora-rtm-sdk";
 import { computed, makeObservable, observable } from "mobx";
 import { agoraConfig } from "src/config/agoraConfig";
-import { debug, error, warn } from "src/logging/logging";
+import { Log } from "src/logging/Log";
 
 type IceCandidateMessage = {
   eventType: "ICE_CANDIDATE";
@@ -19,8 +19,9 @@ export type SignallingSessionReadyCallback = (isOfferer: boolean) => void;
 
 export class PeerToPeerSignallingSession {
   connected = false;
-
   members: string[] = [];
+
+  private log = new Log("peerToPeerSignalling");
 
   private rtmClient!: RtmClient;
   private rtmChannel!: RtmChannel;
@@ -64,13 +65,13 @@ export class PeerToPeerSignallingSession {
     try {
       if (this.rtmChannel) await this.rtmChannel.leave();
     } catch (e) {
-      warn("peerToPeer", "endSession caught exception leaving channel", e);
+      this.log.warn("endSession caught exception leaving channel", e);
     }
 
     try {
       await this.rtmClient.logout();
     } catch (e) {
-      warn("peerToPeer", "endSession caught exception logging out", e);
+      this.log.warn("endSession caught exception logging out", e);
     }
   };
 
@@ -80,11 +81,11 @@ export class PeerToPeerSignallingSession {
 
   private sendMessage = (message: Message): void => {
     if (!this.connected) {
-      error("peerToPeer", "Tried to send message when not connected", message);
+      this.log.error("Tried to send message when not connected", message);
       return;
     }
 
-    debug("peerToPeer", "sendMessage signalling", message);
+    this.log.debug("sendMessage signalling", message);
 
     this.rtmChannel.sendMessage({ text: JSON.stringify(message) });
   };
@@ -133,17 +134,16 @@ export class PeerToPeerSignallingSession {
   };
 
   private handleMemberJoined = (memberId: string): void => {
-    debug("peerToPeer", `handleMemberJoined: ${memberId}`);
+    this.log.debug(`handleMemberJoined: ${memberId}`);
   };
 
   private handleMemberLeft = (memberId: string): void => {
-    debug("peerToPeer", `handleMemberLeft: ${memberId}`);
+    this.log.debug(`handleMemberLeft: ${memberId}`);
   };
 
   private handleChannelMessage = (rtmMessage: RtmMessage) => {
     if (rtmMessage.messageType !== "TEXT") {
-      debug(
-        "peerToPeer",
+      this.log.warn(
         `handleChannelMessage: Unexpected message type: ${rtmMessage.messageType}`,
         { rtmMessage }
       );
@@ -151,6 +151,6 @@ export class PeerToPeerSignallingSession {
     }
 
     const message = JSON.parse(rtmMessage.text);
-    debug("peerToPeer", "handleChannelMessage", message);
+    this.log.debug("peerToPeerSignalling", "handleChannelMessage", message);
   };
 }

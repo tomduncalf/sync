@@ -1,5 +1,5 @@
 import { computed, makeObservable } from "mobx";
-import { debug } from "src/logging/logging";
+import { Log } from "src/logging/Log";
 import {
   PeerToPeerSignallingSession,
   SignallingSessionReadyCallback,
@@ -10,6 +10,8 @@ import {
 } from "src/peerToPeer/WebRtcSession";
 
 export class PeerToPeerSession {
+  private log = new Log("peerToPeer");
+
   private signalling: PeerToPeerSignallingSession;
   private webRtc: WebRtcSession;
 
@@ -50,7 +52,7 @@ export class PeerToPeerSession {
   };
 
   private handleIceCandidate: IceCandidateCallback = (event) => {
-    debug("peerToPeer", "handleIceCandidate", event);
+    this.log.debug("handleIceCandidate", event);
 
     if (event.candidate) this.signalling.sendIceCandidate(event.candidate);
   };
@@ -58,7 +60,7 @@ export class PeerToPeerSession {
   private handleSignallingSessionReady: SignallingSessionReadyCallback = (
     isOfferer
   ) => {
-    debug("peerToPeer", "handleSignallingSessionReady", { isOfferer });
+    this.log.debug("handleSignallingSessionReady", { isOfferer });
 
     if (isOfferer) {
       this.webRtc.createOffer();

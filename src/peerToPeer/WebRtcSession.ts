@@ -1,25 +1,34 @@
 import { webRtcConfig } from "src/config/webRtcConfig";
-import { debug, error } from "src/logging/logging";
+import { Log } from "src/logging/Log";
 
 export type IceCandidateCallback = (event: RTCPeerConnectionIceEvent) => void;
 
 export class WebRtcSession {
+  private log = new Log("peerToPeerWebRtc");
+
   private peerConnection = new RTCPeerConnection(webRtcConfig);
   private dataChannel?: RTCDataChannel;
 
   constructor(iceCandidateCallback: IceCandidateCallback) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (webRtcConfig.iceServers!.length < 2) {
+      this.log.warn(
+        "No TURN server is configured which may result in connectivity issues, see README"
+      );
+    }
+
     this.peerConnection.onicecandidate = iceCandidateCallback;
   }
 
   createOffer = async () => {
-    debug("peerToPeer", "createOffer");
+    this.log.debug("createOffer");
 
     this.peerConnection.onnegotiationneeded = async () => {
       try {
         const offerDescription = await this.peerConnection.createOffer();
         this.setLocalDescription(offerDescription);
       } catch (e) {
-        error("peerToPeer", "createOffer error", e);
+        this.log.error("createOffer error", e);
       }
     };
 
@@ -28,7 +37,7 @@ export class WebRtcSession {
   };
 
   waitForDataChannel = async () => {
-    debug("peerToPeer", "waitForDataChannel");
+    this.log.debug("waitForDataChannel");
 
     this.peerConnection.ondatachannel = (event) => {
       this.dataChannel = event.channel;
@@ -43,7 +52,7 @@ export class WebRtcSession {
       await this.peerConnection.setLocalDescription(description);
       // callback here
     } catch (e) {
-      error("peerToPeer", "setLocalDescription error", e);
+      this.log.error("setLocalDescription error", e);
     }
   };
 }
