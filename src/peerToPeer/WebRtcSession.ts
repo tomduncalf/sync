@@ -1,4 +1,4 @@
-import { makeObservable, observable, runInAction } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { webRtcConfig } from "src/config/webRtcConfig";
 import { Log } from "src/logging/Log";
 
@@ -19,9 +19,7 @@ export class WebRtcSession {
     iceCandidateCallback: IceCandidateCallback,
     private localDescriptionSetCallback: LocalDescriptionSetCallback
   ) {
-    makeObservable(this, {
-      connected: observable,
-    });
+    makeAutoObservable(this);
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (webRtcConfig.iceServers!.length < 2) {
@@ -123,9 +121,7 @@ export class WebRtcSession {
     if (this.dataChannel.readyState === "open") {
       this.log.debug("Data channel open");
 
-      runInAction(() => {
-        this.connected = true;
-      });
+      this.connected = true;
 
       setInterval(() => {
         this.sendMessage(Math.random().toString());
