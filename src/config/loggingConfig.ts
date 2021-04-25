@@ -1,6 +1,6 @@
 export const loggingConfig = {
   enabled: {
-    trace: false,
+    trace: true,
     debug: true,
     warn: true,
     error: true,

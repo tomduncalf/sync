@@ -126,10 +126,6 @@ export class WebRtcSession {
       this.log.debug("Data channel open");
 
       this.connected = true;
-
-      setInterval(() => {
-        this.sendMessage(Math.random().toString());
-      }, 1000);
     }
   };
 

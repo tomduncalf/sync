@@ -4,6 +4,7 @@ export interface BasePeerToPeerMessage {
 
 export interface PingMessage extends BasePeerToPeerMessage {
   eventType: "PING";
+  time: number;
 }
 
 export interface PongMessage extends BasePeerToPeerMessage {

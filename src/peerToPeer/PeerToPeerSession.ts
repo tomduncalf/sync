@@ -90,10 +90,13 @@ export class PeerToPeerSession {
     this.webRtc.sendMessage(JSON.stringify(message));
   };
 
+  // TODO would be nice to infer the type of T from messageType rather than having to be explicit
   registerMessageHandler = <T extends PeerToPeerMessage>(
     messageType: T["eventType"],
     handler: (message: T) => void
   ) => {
+    this.log.trace("registerMessageHandler", { messageType, handler });
+
     if (this.messageHandlers[messageType] === undefined) {
       this.messageHandlers[messageType] = [handler];
     } else {
