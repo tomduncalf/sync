@@ -1,25 +1,42 @@
+import { observer } from "mobx-react";
 import React, { useRef } from "react";
-import { PeerToPeerSignallingSession } from "src/peerToPeer/PeerToPeerSignallingSession";
+import { PeerToPeerSession } from "src/peerToPeer/PeerToPeerSession";
 
-function App(): JSX.Element {
-  const signalling = useRef<PeerToPeerSignallingSession | null>(null);
-
-  const join = () => {
-    signalling.current = new PeerToPeerSignallingSession(
-      "test",
-      Math.random().toString()
+const App = observer(
+  (): JSX.Element => {
+    const session = useRef(
+      new PeerToPeerSession("test4", Math.random().toString())
     );
-  };
 
-  const send = () => {
-    signalling.current?.sendMessage({ type: "test", value: Math.random() });
-  };
+    const join = () => {
+      session.current.startSession();
+    };
 
-  return (
-    <div>
-      Synced DJ <a onClick={join}>Join</a> <a onClick={send}>Send</a>
-    </div>
-  );
-}
+    const leave = () => {
+      session.current.endSession();
+    };
+
+    const send = () => {
+      // signalling.current?.sendMessage({ type: "test", value: Math.random() });
+    };
+
+    return (
+      <div>
+        <div>Synced DJ</div>
+        <div>
+          <a onClick={join}>Join</a>
+        </div>
+        <div>
+          <a onClick={leave}>Leave</a>
+        </div>
+        <div>connected: {session.current.connected ? "true" : "false"}</div>
+        <div>isMaster: {session.current.isMaster ? "true" : "false"}</div>
+        <div>
+          <a onClick={send}>Send</a>
+        </div>
+      </div>
+    );
+  }
+);
 
 export default App;

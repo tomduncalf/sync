@@ -1,6 +1,10 @@
 export const loggingConfig = {
-  enabled: true,
+  enabled: {
+    debug: true,
+    warn: true,
+    error: true,
+  },
   modules: {
-    peerToPeer: { debug: true },
+    peerToPeer: { debug: true, warn: true },
   },
 };

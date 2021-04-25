@@ -4,26 +4,59 @@ import AgoraRTM, {
   RtmMessage,
   RtmStatusCode,
 } from "agora-rtm-sdk";
+import { computed, makeObservable, observable } from "mobx";
 import { agoraConfig } from "src/config/agoraConfig";
-import { debug, error } from "src/logging/logging";
+import { debug, error, warn } from "src/logging/logging";
 
 type Message = Record<string, unknown>;
 
 export class PeerToPeerSignallingSession {
+  connected = false;
+
+  members: string[] = [];
+
   private rtmClient!: RtmClient;
   private rtmChannel!: RtmChannel;
 
   private sessionName: string;
   private username: string;
 
-  private connected = false;
-
   constructor(sessionName: string, username: string) {
+    makeObservable(this, {
+      isMaster: computed,
+      connected: observable,
+      members: observable,
+    });
+
     this.sessionName = sessionName;
     this.username = username;
 
     this.setupRtmClient();
   }
+
+  get isMaster() {
+    return this.members.length === 1;
+  }
+
+  startSession = async () => {
+    await this.rtmClient.login({ uid: this.username });
+  };
+
+  endSession = async () => {
+    this.connected = false;
+
+    try {
+      if (this.rtmChannel) await this.rtmChannel.leave();
+    } catch (e) {
+      warn("peerToPeer", "endSession caught exception leaving channel", e);
+    }
+
+    try {
+      await this.rtmClient.logout();
+    } catch (e) {
+      warn("peerToPeer", "endSession caught exception logging out", e);
+    }
+  };
 
   // TODO message types
   sendMessage = (message: Message): void => {
@@ -36,27 +69,36 @@ export class PeerToPeerSignallingSession {
   };
 
   private setupRtmClient = async (): Promise<void> => {
-    if (!agoraConfig.APP_ID) {
+    if (!agoraConfig.appId) {
       throw new Error("peerToPeer: Agora app ID must be provided, see README");
     }
 
-    this.rtmClient = AgoraRTM.createInstance(agoraConfig.APP_ID);
+    this.rtmClient = AgoraRTM.createInstance(agoraConfig.appId, {
+      logFilter: agoraConfig.logLevel,
+    });
+
     this.rtmClient.on(
       "ConnectionStateChanged",
       this.handleConnectionStateChanged
     );
-
-    await this.rtmClient.login({ uid: this.username });
   };
 
   private setupRtmChannel = async (): Promise<void> => {
     this.rtmChannel = this.rtmClient.createChannel(this.sessionName);
 
     this.rtmChannel.on("MemberJoined", this.handleMemberJoined);
+    this.rtmChannel.on("MemberLeft", this.handleMemberLeft);
+    this.rtmChannel.on("MemberCountUpdated", this.updateMembers);
     this.rtmChannel.on("ChannelMessage", this.handleChannelMessage);
 
     await this.rtmChannel.join();
+    await this.updateMembers();
+
     this.connected = true;
+  };
+
+  private updateMembers = async () => {
+    this.members = await this.rtmChannel.getMembers();
   };
 
   private handleConnectionStateChanged = async (
@@ -69,6 +111,10 @@ export class PeerToPeerSignallingSession {
 
   private handleMemberJoined = (memberId: string): void => {
     debug("peerToPeer", `handleMemberJoined: ${memberId}`);
+  };
+
+  private handleMemberLeft = (memberId: string): void => {
+    debug("peerToPeer", `handleMemberLeft: ${memberId}`);
   };
 
   private handleChannelMessage = (rtmMessage: RtmMessage) => {

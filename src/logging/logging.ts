@@ -6,11 +6,20 @@ export const log = (
   ...logItems: any[]
 ): void => {
   if (
-    level === "WARN" ||
-    (level === "DEBUG" && loggingConfig.modules[module].debug)
-  )
+    level === "DEBUG" &&
+    loggingConfig.enabled.debug &&
+    loggingConfig.modules[module].debug
+  ) {
     console.log(`${module}`, ...logItems);
-  else if (level === "ERROR") console.error(`${module}`, ...logItems);
+  } else if (
+    level === "WARN" &&
+    loggingConfig.enabled.warn &&
+    loggingConfig.modules[module].warn
+  ) {
+    console.warn(`${module}`, ...logItems);
+  } else if (level === "ERROR" && loggingConfig.enabled.error) {
+    console.error(`${module}`, ...logItems);
+  }
 };
 
 export const debug = (
