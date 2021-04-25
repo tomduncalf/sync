@@ -3,9 +3,12 @@ import { webRtcConfig } from "src/config/webRtcConfig";
 import { Log } from "src/logging/Log";
 
 export type IceCandidateCallback = (event: RTCPeerConnectionIceEvent) => void;
+
 export type LocalDescriptionSetCallback = (
   description: RTCSessionDescriptionInit
 ) => void;
+
+export type WebRtcMessageCallback = (message: string) => void;
 
 export class WebRtcSession {
   connected = false;
@@ -17,7 +20,8 @@ export class WebRtcSession {
 
   constructor(
     iceCandidateCallback: IceCandidateCallback,
-    private localDescriptionSetCallback: LocalDescriptionSetCallback
+    private localDescriptionSetCallback: LocalDescriptionSetCallback,
+    private messageCallback: WebRtcMessageCallback
   ) {
     makeAutoObservable(this);
 
@@ -131,5 +135,7 @@ export class WebRtcSession {
 
   private handleMessage = (event: MessageEvent<any>) => {
     this.log.trace("handleMessage", event.data);
+
+    this.messageCallback(event.data);
   };
 }

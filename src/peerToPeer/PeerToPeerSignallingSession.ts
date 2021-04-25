@@ -159,6 +159,7 @@ export class PeerToPeerSignallingSession {
     this.log.debug(`handleMemberLeft: ${memberId}`);
   };
 
+  // TODO should we be using direct p2p messages instead of channel?
   private handleChannelMessage = (rtmMessage: RtmMessage) => {
     if (rtmMessage.messageType !== "TEXT") {
       this.log.warn(
