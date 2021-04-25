@@ -30,7 +30,7 @@ const App = observer(
           <a onClick={leave}>Leave</a>
         </div>
         <div>connected: {session.current.connected ? "true" : "false"}</div>
-        <div>isMaster: {session.current.isMaster ? "true" : "false"}</div>
+        <div>isOfferer: {session.current.isOfferer ? "true" : "false"}</div>
         <div>
           <a onClick={send}>Send</a>
         </div>

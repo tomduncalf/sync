@@ -1,5 +1,7 @@
 import { loggingConfig } from "src/config/loggingConfig";
 
+const MODULE_STYLE = "color: #999";
+
 export const log = (
   level: "DEBUG" | "WARN" | "ERROR",
   module: keyof typeof loggingConfig.modules,
@@ -10,15 +12,15 @@ export const log = (
     loggingConfig.enabled.debug &&
     loggingConfig.modules[module].debug
   ) {
-    console.log(`${module}`, ...logItems);
+    console.log(`%c${module}`, MODULE_STYLE, ...logItems);
   } else if (
     level === "WARN" &&
     loggingConfig.enabled.warn &&
     loggingConfig.modules[module].warn
   ) {
-    console.warn(`${module}`, ...logItems);
+    console.warn(`%c${module}`, MODULE_STYLE, ...logItems);
   } else if (level === "ERROR" && loggingConfig.enabled.error) {
-    console.error(`${module}`, ...logItems);
+    console.error(`%c${module}`, MODULE_STYLE, ...logItems);
   }
 };
 

@@ -8,7 +8,14 @@ import { computed, makeObservable, observable } from "mobx";
 import { agoraConfig } from "src/config/agoraConfig";
 import { debug, error, warn } from "src/logging/logging";
 
-type Message = Record<string, unknown>;
+type IceCandidateMessage = {
+  eventType: "ICE_CANDIDATE";
+  candidate: RTCIceCandidate;
+};
+
+type Message = IceCandidateMessage;
+
+export type SignallingSessionReadyCallback = (isOfferer: boolean) => void;
 
 export class PeerToPeerSignallingSession {
   connected = false;
@@ -21,9 +28,15 @@ export class PeerToPeerSignallingSession {
   private sessionName: string;
   private username: string;
 
-  constructor(sessionName: string, username: string) {
+  private sessionReadyCallback: SignallingSessionReadyCallback;
+
+  constructor(
+    sessionName: string,
+    username: string,
+    sessionReadyCallback: SignallingSessionReadyCallback
+  ) {
     makeObservable(this, {
-      isMaster: computed,
+      isOfferer: computed,
       connected: observable,
       members: observable,
     });
@@ -31,11 +44,14 @@ export class PeerToPeerSignallingSession {
     this.sessionName = sessionName;
     this.username = username;
 
+    this.sessionReadyCallback = sessionReadyCallback;
+
     this.setupRtmClient();
   }
 
-  get isMaster() {
-    return this.members.length === 1;
+  // TODO make this work for n users
+  get isOfferer() {
+    return this.members.length === 2;
   }
 
   startSession = async () => {
@@ -58,12 +74,17 @@ export class PeerToPeerSignallingSession {
     }
   };
 
-  // TODO message types
-  sendMessage = (message: Message): void => {
+  sendIceCandidate = (candidate: RTCIceCandidate) => {
+    this.sendMessage({ eventType: "ICE_CANDIDATE", candidate });
+  };
+
+  private sendMessage = (message: Message): void => {
     if (!this.connected) {
       error("peerToPeer", "Tried to send message when not connected", message);
       return;
     }
+
+    debug("peerToPeer", "sendMessage signalling", message);
 
     this.rtmChannel.sendMessage({ text: JSON.stringify(message) });
   };
@@ -93,6 +114,8 @@ export class PeerToPeerSignallingSession {
 
     await this.rtmChannel.join();
     await this.updateMembers();
+
+    this.sessionReadyCallback(this.isOfferer);
 
     this.connected = true;
   };
