@@ -1,3 +1,4 @@
+import { makeObservable, observable, runInAction } from "mobx";
 import { webRtcConfig } from "src/config/webRtcConfig";
 import { Log } from "src/logging/Log";
 
@@ -7,6 +8,8 @@ export type LocalDescriptionSetCallback = (
 ) => void;
 
 export class WebRtcSession {
+  connected = false;
+
   private log = new Log("peerToPeerWebRtc");
 
   private peerConnection = new RTCPeerConnection(webRtcConfig);
@@ -16,6 +19,10 @@ export class WebRtcSession {
     iceCandidateCallback: IceCandidateCallback,
     private localDescriptionSetCallback: LocalDescriptionSetCallback
   ) {
+    makeObservable(this, {
+      connected: observable,
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (webRtcConfig.iceServers!.length < 2) {
       this.log.warn(
@@ -69,6 +76,18 @@ export class WebRtcSession {
     }
   };
 
+  sendMessage = (message: string) => {
+    if (!this.dataChannel) {
+      this.log.error("sendMessage called before dataChannel is ready", {
+        message,
+      });
+      return;
+    }
+
+    this.log.trace("sendMessage", { message });
+    this.dataChannel.send(message);
+  };
+
   private setLocalDescription = async (
     description: RTCSessionDescriptionInit
   ) => {
@@ -104,27 +123,17 @@ export class WebRtcSession {
     if (this.dataChannel.readyState === "open") {
       this.log.debug("Data channel open");
 
+      runInAction(() => {
+        this.connected = true;
+      });
+
       setInterval(() => {
         this.sendMessage(Math.random().toString());
       }, 1000);
-
-      // newPeerJoined(isWebrtcSessionMaster);
     }
   };
 
   private handleMessage = (event: MessageEvent<any>) => {
-    this.log.debug("handleMessage", event.data);
-  };
-
-  private sendMessage = (message: string) => {
-    if (!this.dataChannel) {
-      this.log.error("sendMessage called before dataChannel is ready", {
-        message,
-      });
-      return;
-    }
-
-    this.log.debug("sendMessage", { message });
-    this.dataChannel.send(message);
+    this.log.trace("handleMessage", event.data);
   };
 }
