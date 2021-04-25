@@ -1,5 +1,7 @@
+import { autorun } from "mobx";
 import { observer } from "mobx-react";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
+import { PingMessage } from "src/peerToPeer/messages";
 import { PeerToPeerSession } from "src/peerToPeer/PeerToPeerSession";
 
 const App = observer(
@@ -7,6 +9,12 @@ const App = observer(
     const session = useRef(
       new PeerToPeerSession("test3", Math.random().toString())
     );
+
+    useEffect(() => {
+      session.current.registerMessageHandler("PING", (message: PingMessage) => {
+        console.log("handle ping");
+      });
+    }, []);
 
     const join = () => {
       session.current.startSession();
@@ -17,7 +25,10 @@ const App = observer(
     };
 
     const send = () => {
-      // signalling.current?.sendMessage({ type: "test", value: Math.random() });
+      session.current.sendMessage({
+        eventType: "PING",
+        time: Date.now(),
+      });
     };
 
     return (
