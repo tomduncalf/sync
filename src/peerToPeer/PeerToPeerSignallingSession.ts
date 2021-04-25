@@ -4,7 +4,13 @@ import AgoraRTM, {
   RtmMessage,
   RtmStatusCode,
 } from "agora-rtm-sdk";
-import { computed, makeObservable, observable } from "mobx";
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  runInAction,
+} from "mobx";
 import { agoraConfig } from "src/config/agoraConfig";
 import { Log } from "src/logging/Log";
 
@@ -36,10 +42,11 @@ export class PeerToPeerSignallingSession {
     username: string,
     sessionReadyCallback: SignallingSessionReadyCallback
   ) {
-    makeObservable(this, {
+    makeObservable<this, "setConnected">(this, {
       isOfferer: computed,
       connected: observable,
       members: observable,
+      setConnected: action,
     });
 
     this.sessionName = sessionName;
@@ -60,7 +67,7 @@ export class PeerToPeerSignallingSession {
   };
 
   endSession = async () => {
-    this.connected = false;
+    this.setConnected(false);
 
     try {
       if (this.rtmChannel) await this.rtmChannel.leave();
@@ -118,11 +125,18 @@ export class PeerToPeerSignallingSession {
 
     this.sessionReadyCallback(this.isOfferer);
 
-    this.connected = true;
+    this.setConnected(true);
+  };
+
+  private setConnected = (state: boolean) => {
+    this.connected = state;
   };
 
   private updateMembers = async () => {
-    this.members = await this.rtmChannel.getMembers();
+    const members = await this.rtmChannel.getMembers();
+    runInAction(() => {
+      this.members = members;
+    });
   };
 
   private handleConnectionStateChanged = async (
