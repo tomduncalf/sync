@@ -10,7 +10,7 @@ export class Log {
   private logArgs(level: string) {
     return [`%c${this.module} %c${level}`, "color: #777", "color: #999"];
   }
-  trace = (...logItems: any[]) => {
+  trace = (...logItems: any[]): void => {
     if (
       loggingConfig.enabled.trace &&
       loggingConfig.modules[this.module].trace
@@ -19,7 +19,7 @@ export class Log {
     }
   };
 
-  debug = (...logItems: any[]) => {
+  debug = (...logItems: any[]): void => {
     if (
       loggingConfig.enabled.debug &&
       loggingConfig.modules[this.module].debug
@@ -28,13 +28,13 @@ export class Log {
     }
   };
 
-  warn = (...logItems: any[]) => {
+  warn = (...logItems: any[]): void => {
     if (loggingConfig.enabled.warn && loggingConfig.modules[this.module].warn) {
       console.warn(...this.logArgs("WARN"), ...logItems);
     }
   };
 
-  error = (...logItems: any[]) => {
+  error = (...logItems: any[]): void => {
     if (loggingConfig.enabled.error) {
       console.error(...this.logArgs("ERROR"), ...logItems);
     }

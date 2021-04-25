@@ -57,19 +57,19 @@ export class PeerToPeerSession {
     );
   }
 
-  get isOfferer() {
+  get isOfferer(): boolean {
     return this.signalling.isOfferer;
   }
 
-  get connected() {
+  get connected(): boolean {
     return this.signalling.connected;
   }
 
-  startSession = () => {
+  startSession = (): void => {
     this.signalling.startSession();
   };
 
-  endSession = () => {
+  endSession = (): void => {
     this.signalling.endSession();
   };
 

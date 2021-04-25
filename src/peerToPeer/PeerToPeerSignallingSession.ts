@@ -67,15 +67,15 @@ export class PeerToPeerSignallingSession {
   }
 
   // TODO make this work for n users
-  get isOfferer() {
+  get isOfferer(): boolean {
     return this.members.length === 2;
   }
 
-  startSession = async () => {
+  startSession = async (): Promise<void> => {
     await this.rtmClient.login({ uid: this.username });
   };
 
-  endSession = async () => {
+  endSession = async (): Promise<void> => {
     this.setConnected(false);
 
     try {
@@ -91,11 +91,11 @@ export class PeerToPeerSignallingSession {
     }
   };
 
-  sendIceCandidate = (candidate: RTCIceCandidate) => {
+  sendIceCandidate = (candidate: RTCIceCandidate): void => {
     this.sendMessage({ eventType: "ICE_CANDIDATE", candidate });
   };
 
-  sendSessionDescription = (description: RTCSessionDescriptionInit) => {
+  sendSessionDescription = (description: RTCSessionDescriptionInit): void => {
     this.sendMessage({ eventType: "SESSION_DESCRIPTION", description });
   };
 

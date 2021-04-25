@@ -26,7 +26,7 @@ export class WebRtcSession {
     this.peerConnection.onicecandidate = iceCandidateCallback;
   }
 
-  createOffer = async () => {
+  createOffer = async (): Promise<void> => {
     this.log.trace("createOffer");
 
     this.peerConnection.onnegotiationneeded = async () => {
@@ -42,7 +42,7 @@ export class WebRtcSession {
     this.setupDataChannel();
   };
 
-  waitForDataChannel = async () => {
+  waitForDataChannel = async (): Promise<void> => {
     this.log.trace("waitForDataChannel");
 
     this.peerConnection.ondatachannel = (event) => {
@@ -51,13 +51,15 @@ export class WebRtcSession {
     };
   };
 
-  addIceCandidate = (candidate: RTCIceCandidate) => {
+  addIceCandidate = (candidate: RTCIceCandidate): void => {
     this.log.trace("addIceCandidate", { candidate });
 
     this.peerConnection.addIceCandidate(candidate);
   };
 
-  setRemoteDescription = async (description: RTCSessionDescriptionInit) => {
+  setRemoteDescription = async (
+    description: RTCSessionDescriptionInit
+  ): Promise<void> => {
     this.log.trace("setRemoteDescription", { description });
 
     await this.peerConnection.setRemoteDescription(description);
@@ -103,7 +105,7 @@ export class WebRtcSession {
       this.log.debug("Data channel open");
 
       setInterval(() => {
-        this.dataChannel!.send(Math.random().toString());
+        this.sendMessage(Math.random().toString());
       }, 1000);
 
       // newPeerJoined(isWebrtcSessionMaster);
@@ -112,5 +114,17 @@ export class WebRtcSession {
 
   private handleMessage = (event: MessageEvent<any>) => {
     this.log.debug("handleMessage", event.data);
+  };
+
+  private sendMessage = (message: string) => {
+    if (!this.dataChannel) {
+      this.log.error("sendMessage called before dataChannel is ready", {
+        message,
+      });
+      return;
+    }
+
+    this.log.debug("sendMessage", { message });
+    this.dataChannel.send(message);
   };
 }
