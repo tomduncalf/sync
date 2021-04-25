@@ -1,31 +1,31 @@
-import { autorun } from "mobx";
 import { observer } from "mobx-react";
 import React, { useEffect, useRef } from "react";
+import { Application } from "src/Application";
 import { PingMessage } from "src/peerToPeer/messages";
-import { PeerToPeerSession } from "src/peerToPeer/PeerToPeerSession";
+
+const application = new Application();
 
 const App = observer(
   (): JSX.Element => {
-    const session = useRef(
-      new PeerToPeerSession("test3", Math.random().toString())
-    );
-
     useEffect(() => {
-      session.current.registerMessageHandler("PING", (message: PingMessage) => {
-        console.log("handle ping");
-      });
+      application.peerToPeerSession.registerMessageHandler(
+        "PING",
+        (message: PingMessage) => {
+          console.log("handle ping");
+        }
+      );
     }, []);
 
     const join = () => {
-      session.current.startSession();
+      application.peerToPeerSession.startSession();
     };
 
     const leave = () => {
-      session.current.endSession();
+      application.peerToPeerSession.endSession();
     };
 
     const send = () => {
-      session.current.sendMessage({
+      application.peerToPeerSession.sendMessage({
         eventType: "PING",
         time: Date.now(),
       });
@@ -40,8 +40,14 @@ const App = observer(
         <div>
           <a onClick={leave}>Leave</a>
         </div>
-        <div>connected: {session.current.connected ? "true" : "false"}</div>
-        <div>isOfferer: {session.current.isOfferer ? "true" : "false"}</div>
+        <div>
+          connected:{" "}
+          {application.peerToPeerSession.connected ? "true" : "false"}
+        </div>
+        <div>
+          isOfferer:{" "}
+          {application.peerToPeerSession.isOfferer ? "true" : "false"}
+        </div>
         <div>
           <a onClick={send}>Send</a>
         </div>
