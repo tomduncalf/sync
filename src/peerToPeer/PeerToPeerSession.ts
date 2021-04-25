@@ -2,6 +2,7 @@ import { computed, makeObservable } from "mobx";
 import { Log } from "src/logging/Log";
 import {
   PeerToPeerSignallingSession,
+  SignallingIceCandidateCallback,
   SignallingSessionReadyCallback,
 } from "src/peerToPeer/PeerToPeerSignallingSession";
 import {
@@ -15,10 +16,7 @@ export class PeerToPeerSession {
   private signalling: PeerToPeerSignallingSession;
   private webRtc: WebRtcSession;
 
-  private sessionName: string;
-  private username: string;
-
-  constructor(sessionName: string, username: string) {
+  constructor(private sessionName: string, private username: string) {
     makeObservable(this, {
       isOfferer: computed,
       connected: computed,
@@ -30,7 +28,8 @@ export class PeerToPeerSession {
     this.signalling = new PeerToPeerSignallingSession(
       sessionName,
       username,
-      this.handleSignallingSessionReady
+      this.handleSignallingSessionReady,
+      this.handleSignallingIceCandidate
     );
     this.webRtc = new WebRtcSession(this.handleIceCandidate);
   }
@@ -52,7 +51,7 @@ export class PeerToPeerSession {
   };
 
   private handleIceCandidate: IceCandidateCallback = (event) => {
-    this.log.debug("handleIceCandidate", event);
+    this.log.trace("handleIceCandidate", event);
 
     if (event.candidate) this.signalling.sendIceCandidate(event.candidate);
   };
@@ -60,12 +59,20 @@ export class PeerToPeerSession {
   private handleSignallingSessionReady: SignallingSessionReadyCallback = (
     isOfferer
   ) => {
-    this.log.debug("handleSignallingSessionReady", { isOfferer });
+    this.log.trace("handleSignallingSessionReady", { isOfferer });
 
     if (isOfferer) {
       this.webRtc.createOffer();
     } else {
       this.webRtc.waitForDataChannel();
     }
+  };
+
+  private handleSignallingIceCandidate: SignallingIceCandidateCallback = (
+    candidate
+  ) => {
+    this.log.trace("handleSignallingIceCandidate", { candidate });
+
+    this.webRtc.addIceCandidate(candidate);
   };
 }

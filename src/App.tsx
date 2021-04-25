@@ -5,7 +5,7 @@ import { PeerToPeerSession } from "src/peerToPeer/PeerToPeerSession";
 const App = observer(
   (): JSX.Element => {
     const session = useRef(
-      new PeerToPeerSession("test8", Math.random().toString())
+      new PeerToPeerSession("test", Math.random().toString())
     );
 
     const join = () => {

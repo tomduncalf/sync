@@ -22,6 +22,9 @@ type IceCandidateMessage = {
 type Message = IceCandidateMessage;
 
 export type SignallingSessionReadyCallback = (isOfferer: boolean) => void;
+export type SignallingIceCandidateCallback = (
+  candidate: RTCIceCandidate
+) => void;
 
 export class PeerToPeerSignallingSession {
   connected = false;
@@ -32,15 +35,11 @@ export class PeerToPeerSignallingSession {
   private rtmClient!: RtmClient;
   private rtmChannel!: RtmChannel;
 
-  private sessionName: string;
-  private username: string;
-
-  private sessionReadyCallback: SignallingSessionReadyCallback;
-
   constructor(
-    sessionName: string,
-    username: string,
-    sessionReadyCallback: SignallingSessionReadyCallback
+    private sessionName: string,
+    private username: string,
+    private sessionReadyCallback: SignallingSessionReadyCallback,
+    private iceCandidateCallback: SignallingIceCandidateCallback
   ) {
     makeObservable<this, "setConnected">(this, {
       isOfferer: computed,
@@ -48,11 +47,6 @@ export class PeerToPeerSignallingSession {
       members: observable,
       setConnected: action,
     });
-
-    this.sessionName = sessionName;
-    this.username = username;
-
-    this.sessionReadyCallback = sessionReadyCallback;
 
     this.setupRtmClient();
   }
@@ -92,7 +86,7 @@ export class PeerToPeerSignallingSession {
       return;
     }
 
-    this.log.debug("sendMessage signalling", message);
+    this.log.debug("sendMessage", message);
 
     this.rtmChannel.sendMessage({ text: JSON.stringify(message) });
   };
@@ -164,7 +158,19 @@ export class PeerToPeerSignallingSession {
       return;
     }
 
-    const message = JSON.parse(rtmMessage.text);
-    this.log.debug("peerToPeerSignalling", "handleChannelMessage", message);
+    const message = JSON.parse(rtmMessage.text) as Message;
+    this.log.debug("handleChannelMessage", message);
+
+    switch (message.eventType) {
+      case "ICE_CANDIDATE":
+        this.iceCandidateCallback(message.candidate);
+        break;
+      default:
+        this.log.warn(
+          `handleChannelMessage: Unexpected eventType: ${message.eventType}`,
+          { message }
+        );
+        break;
+    }
   };
 }

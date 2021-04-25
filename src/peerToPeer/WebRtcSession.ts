@@ -21,7 +21,7 @@ export class WebRtcSession {
   }
 
   createOffer = async () => {
-    this.log.debug("createOffer");
+    this.log.trace("createOffer");
 
     this.peerConnection.onnegotiationneeded = async () => {
       try {
@@ -37,12 +37,18 @@ export class WebRtcSession {
   };
 
   waitForDataChannel = async () => {
-    this.log.debug("waitForDataChannel");
+    this.log.trace("waitForDataChannel");
 
     this.peerConnection.ondatachannel = (event) => {
       this.dataChannel = event.channel;
       //setupDataChannel();
     };
+  };
+
+  addIceCandidate = (candidate: RTCIceCandidate) => {
+    this.log.trace("addIceCandidate", { candidate });
+
+    this.peerConnection.addIceCandidate(candidate);
   };
 
   private setLocalDescription = async (

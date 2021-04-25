@@ -1,12 +1,13 @@
 export const loggingConfig = {
   enabled: {
+    trace: true,
     debug: true,
     warn: true,
     error: true,
   },
   modules: {
-    peerToPeer: { debug: true, warn: true },
-    peerToPeerSignalling: { debug: true, warn: true },
-    peerToPeerWebRtc: { debug: true, warn: true },
+    peerToPeer: { trace: true, debug: true, warn: true },
+    peerToPeerSignalling: { trace: true, debug: true, warn: true },
+    peerToPeerWebRtc: { trace: true, debug: true, warn: true },
   },
 };
