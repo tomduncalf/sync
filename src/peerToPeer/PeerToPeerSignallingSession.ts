@@ -4,13 +4,7 @@ import AgoraRTM, {
   RtmMessage,
   RtmStatusCode,
 } from "agora-rtm-sdk";
-import {
-  action,
-  computed,
-  makeObservable,
-  observable,
-  runInAction,
-} from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { agoraConfig } from "src/config/agoraConfig";
 import { Log } from "src/logging/Log";
 
@@ -56,12 +50,7 @@ export class PeerToPeerSignallingSession {
     private iceCandidateCallback: SignallingIceCandidateCallback,
     private sessionDescriptionCallback: SignallingSessionDescriptionCallback
   ) {
-    makeObservable<this, "setConnected">(this, {
-      isOfferer: computed,
-      connected: observable,
-      members: observable,
-      setConnected: action,
-    });
+    makeAutoObservable(this);
 
     this.setupRtmClient();
   }
@@ -147,9 +136,11 @@ export class PeerToPeerSignallingSession {
 
   private updateMembers = async () => {
     const members = await this.rtmChannel.getMembers();
-    runInAction(() => {
-      this.members = members;
-    });
+    this.setMembers(members);
+  };
+
+  private setMembers = (members: string[]) => {
+    this.members = members;
   };
 
   private handleConnectionStateChanged = async (

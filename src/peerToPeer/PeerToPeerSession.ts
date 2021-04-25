@@ -15,7 +15,7 @@
  *    now communicate via WebRTC directly
  */
 
-import { computed, makeObservable } from "mobx";
+import { makeAutoObservable } from "mobx";
 import { Log } from "src/logging/Log";
 import { PeerToPeerMessage } from "src/peerToPeer/messages";
 import {
@@ -37,10 +37,7 @@ export class PeerToPeerSession {
   private webRtc: WebRtcSession;
 
   constructor(private sessionName: string, private username: string) {
-    makeObservable(this, {
-      isOfferer: computed,
-      connected: computed,
-    });
+    makeAutoObservable(this);
 
     this.sessionName = sessionName;
     this.username = username;
