@@ -4,11 +4,13 @@ export interface BasePeerToPeerMessage {
 
 export interface PingMessage extends BasePeerToPeerMessage {
   eventType: "PING";
-  time: number;
+  globalHostTime: number;
 }
 
 export interface PongMessage extends BasePeerToPeerMessage {
   eventType: "PONG";
+  globalHostTime: number;
+  pingGlobalHostTime: number;
 }
 
 export type PeerToPeerMessage = PingMessage | PongMessage;
