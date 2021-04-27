@@ -47,7 +47,7 @@ export class WebRtcSession {
       }
     };
 
-    this.dataChannel = this.peerConnection.createDataChannel("chat");
+    this.dataChannel = this.peerConnection.createDataChannel("data");
     this.setupDataChannel();
   };
 
