@@ -1,4 +1,4 @@
-# Synced DJ
+# Sync - WIP
 
 ## Prerequisites
 
