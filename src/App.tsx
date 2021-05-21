@@ -3,6 +3,8 @@ import React, { useEffect, useRef } from "react";
 import { Application } from "src/Application";
 import { PingMessage } from "src/peerToPeer/messages";
 
+import rust from "rust-audio-worklet";
+
 const application = new Application();
 
 const App = observer(
@@ -16,6 +18,12 @@ const App = observer(
       );
     }, []);
 
+    const loadRust = async () => {
+      // const rust = await import("rust-audio-worklet");
+      // rust.greet();
+      // console.log(rust);
+    };
+
     const join = () => {
       application.peerToPeerSession.startSession();
     };
@@ -25,15 +33,16 @@ const App = observer(
     };
 
     const send = () => {
-      application.peerToPeerSession.sendMessage({
-        eventType: "PING",
-        time: Date.now(),
-      });
+      // application.peerToPeerSession.sendMessage({
+      //   eventType: "PING",
+      //   // time: Date.now(),
+      // });
     };
 
     return (
       <div>
         <div>Synced DJ</div>
+        <a onClick={loadRust}>load rust</a>
         <div>
           <a onClick={join}>Join</a>
         </div>
